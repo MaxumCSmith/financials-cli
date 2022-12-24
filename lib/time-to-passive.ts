@@ -1,5 +1,21 @@
 import fsExtra from 'fs-extra'
 
+// NOTE: these two terms were a simple derivation of from difference equations assuming simple interest
+
+const term1 = (n: number, x_naught: number, interest_rate: number) => {
+	return x_naught * (1 + interest_rate)**n
+}
+
+const term2 = (n: number, s: number, interest_rate: number) => {
+	let summation = 0;
+	for (let i = 0; i < n; i++) {
+		summation += (1 + interest_rate)**i
+	}
+	return s * summation;
+}
+
+const futureAmt = (n: number, x_naught: number, s: number, interest_rate: number) => term1(n, x_naught, interest_rate) + term2(n, s, interest_rate);
+
 interface IArgs {
 	startingAmount: string;
 	annualSave: string;
@@ -14,27 +30,15 @@ export const main = (args: IArgs) => {
 	const interestRate = parseFloat(args.interestRate);
 	const desiredPassiveIncome = parseFloat(args.desiredPassiveIncome);
 
-	const term1 = (n: number, x_naught: number, interest_rate: number) => {
-		return x_naught * (1 + interest_rate)**n
-	}
+	
 
-	const term2 = (n: number, s: number, interest_rate: number) => {
-		let summation = 0;
-		for (let i = 0; i < n; i++) {
-			summation += (1 + interest_rate)**i
-		}
-		return s * summation;
-	}
-
-	const futureAmt = (n: number, x_naught: number, s: number, interest_rate: number) => term1(n, x_naught, interest_rate) + term2(n, s, interest_rate);
-
-	let passiveIncome4Percent = 0;
+	let passiveIncome = 0;
 	let i = 0;
 	let net_worth = 0;
 
-	while (passiveIncome4Percent < desiredPassiveIncome) {
+	while (passiveIncome < desiredPassiveIncome) {
 		net_worth = futureAmt(i, startingAmount, annualSave, interestRate);
-		passiveIncome4Percent = interestRate * net_worth;
+		passiveIncome = interestRate * net_worth;
 		i++;
 	}
 
@@ -42,7 +46,7 @@ export const main = (args: IArgs) => {
 	console.log(`Interest Rate: ${interestRate}`);
 	console.log(`Starting Amt, Ending Amt: (${startingAmount}, ${Math.round(net_worth)})`);
 	console.log(`Desired Passive Income: ${Math.round(desiredPassiveIncome)}`);
-	console.log(`Expected Annual Income at end: ${Math.round(passiveIncome4Percent)}`);
+	console.log(`Expected Annual Income at end: ${Math.round(passiveIncome)}`);
 
 	fsExtra.writeJsonSync(
 		`./output/${args.outputFileName}`,
@@ -52,7 +56,7 @@ export const main = (args: IArgs) => {
 			startingAmount,
 			endingAmount: Math.round(net_worth),
 			desiredPassiveIncome,
-			expectedAnnualIncomeEnd: Math.round(passiveIncome4Percent)
+			expectedAnnualIncomeEnd: Math.round(passiveIncome)
 		}
 	)
 }
